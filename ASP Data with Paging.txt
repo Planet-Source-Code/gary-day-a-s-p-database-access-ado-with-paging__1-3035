@@ -1,0 +1,185 @@
+<%Response.buffer = True %>
+<html>
+
+<head>
+ 
+</head>
+
+<body bgColor=#ffffff>
+
+<!-- #include virtual="/Inc/adovbs.inc"-->
+<%
+
+' Create a Data Connection to the database.  Data connection can be any ODBC database as long as a DSN has been created.
+
+
+set oconn = server.CreateObject("ADODB.connection")
+oConn.Open "dsn=usedequipsql;uid=sa;pwd=;DATABASE=usedequip" 
+SQLtemp="SELECT * from MyDatabaseTable"
+
+' Set the paging parameters.  MyPageSize is the number of records displayed on each page.  we are also checking to see if we should use the SQLtemp string, or the URL encoded SQL string.
+
+mypage=request("whichpage")
+
+If  mypage="" then
+   mypage=1
+' If passing a session variable, include that code here.  Example: If you are calling this ASP from an HTML form that has a field called mydescription.
+  'session("mydescription") = Request.QueryString("mydescription")
+end if
+mypagesize=request("pagesize")
+If  mypagesize="" then
+   mypagesize=30
+end if
+mySQL=request("SQLquery")
+IF  mySQL="" THEN
+   mySQL=SQLtemp
+END IF
+
+' Open a recordset and set paging
+
+set ors=Server.CreateObject("ADODB.Recordset")
+ors.cursorlocation=aduseclient
+ors.cachesize=20
+ors.open mySQL,oconn
+ors.movefirst
+ors.pagesize=mypagesize
+maxpages=cint(ors.pagecount)
+maxrecs=cint(ors.pagesize)
+ors.absolutepage=mypage
+howmanyrecs=0
+
+%>
+
+<!-- Create a table to present our data -->
+	
+<table width="100%" border="0" cellpadding="0" cellspacing="0">
+    
+    <tr>
+        <td align="center" colSpan="6" vAlign="top"><font size="4" face="Arial"><b>My Data Page</b>
+            </font>
+            
+     </tr>
+     <tr>
+     <td align="center" colspan="6"><font size="3" face="Arial" color="red"> <b><%response.write "Page " & mypage & " of " & maxpages & ""%></b>
+
+     </font>
+		
+    
+	
+	<tr>		
+		<td colspan="6" align="middle" valign="center" cellpadding = "0">&nbsp; 
+            
+		</td>
+	</tr>	
+	<tr>
+	<th bgcolor="#c0c0c0"><font SIZE="3" FACE="arial" COLOR="#80000" cellpadding = "0">
+		Column 1</font> 
+	</th>
+	<th bgcolor="#c0c0c0"><font SIZE="3" FACE="arial" COLOR="#80000">
+		Column 2</font> 
+	</th>
+	<th bgcolor="#c0c0c0"><font SIZE="3" FACE="arial" COLOR="#80000">
+		Column 3</font> 
+	</th>
+	
+	<th bgcolor="#c0c0c0"><font SIZE="3" FACE="arial" COLOR="#80000">
+		Column 4</font> 
+	</th>
+	<th bgcolor="#c0c0c0"><font SIZE="3" FACE="arial" COLOR="#80000">
+		Column 5</font> 
+	</th>
+	<tr><td bgcolor="#000000" colspan="6"></td></td>
+	</tr>
+	
+    <%
+	do while not ors.eof and howmanyrecs < maxrecs
+	
+	' Check to see what color the row should be.  These colors are light grey, and dark grey.  Color names are not recommended here.
+
+	If iswitch = TRUE then
+		rcolor = "#c0c0c0"
+		iswitch = False
+	Else rcolor = "ffffff"
+		iswitch = TRUE
+	End If 
+	
+	
+    %>
+
+	    <tr>
+		<td align="left" bgcolor=<%=rcolor%>><font SIZE="2" FACE="arial" COLOR="black">
+            <%Response.Write "<B>" & ors.fields("DatabaseField1") &"</B>"%></font>
+		</td>
+			
+		<td align="middle" bgcolor=<%=rcolor%>><font SIZE="2" FACE="arial" COLOR="black">
+            <%Response.Write ors.fields("DatabaseField2")%> </font>
+		</td>
+	
+		<td align="middle" bgcolor=<%=rcolor%>><font SIZE="2" FACE="arial" COLOR="black">
+            <%Response.Write ors.fields("DatabaseField3")%></font>
+		</td>
+			
+		<td align="right" bgcolor=<%=rcolor%>><font SIZE="2" FACE="arial" COLOR="black">
+            <%Response.Write ors.fieldS("DatabaseFields4")%></font>
+		</td>
+			
+		<td align="middle" vAlign="center" bgcolor=<%=scolor%>><font color="black">
+            <%Response.Write ors.fieldS("DatabaseFields4")%></font>
+		</td>
+</tr>
+		
+		            
+<%
+	
+ors.movenext	
+howmanyrecs=howmanyrecs+1	
+loop
+
+%>
+	
+<!-- Page Control.  Build a table which contains Hyperlinks to each page. -->	
+
+	<TR>
+	<td align=center colspan="6" bgcolor=SkyBlue><H3>Page Control<h3></td>
+	<tr>
+	<td align=center colspan="6" bgcolor=SkyBlue><font size="2" face="arial">
+	
+<%
+pad="0"
+scriptname=request.servervariables("script_name")
+
+%> 
+
+<tr>
+	<td align=center colspan=6 bgcolor=SkyBlue>
+
+<%
+   for counter=1 to maxpages
+	
+   If counter>=25 then
+      pad=""
+   end if
+   
+   ref="<font size='2' face='Arial' color='black'><a href='" & scriptname 
+   ref=ref & "?whichpage=" & counter
+   ref=ref & "&pagesize=" & mypagesize 
+   ref=ref & "&sqlQuery=" & server.URLencode(mySQL)
+   ref=ref & "'>" & pad & counter & "</a>"
+   
+   response.write ref & "</font> "
+   
+next
+
+
+%>		
+	</font>
+</table>
+	
+<%
+	
+	ors.close
+	set rstemp=nothing
+	
+%>
+	
+</body></html>
